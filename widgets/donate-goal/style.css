@@ -1,0 +1,59 @@
+/*!******************************************************************************
+ * Copyright (c) 2026 Voguh
+ *
+ * This program and the accompanying materials are made
+ * available under the terms of the Eclipse Public License 2.0
+ * which is available at https://www.eclipse.org/legal/epl-2.0/
+ *
+ * SPDX-License-Identifier: EPL-2.0
+ ******************************************************************************/
+
+@import url('https://fonts.googleapis.com/css2?family=Nunito:ital,wght@0,200..1000;1,200..1000&display=swap');
+
+html, body {
+    font-family: "Nunito", sans-serif;
+    box-sizing: border-box;
+    padding: 0;
+    margin: 0;
+}
+
+#main-container {
+    position: absolute;
+    top: 16px;
+    left: 16px;
+    right: 16px;
+}
+
+#main-container .display {
+    background-color: rgba(255, 255, 255, 0.1);
+    border-radius: 8px;
+    padding: 16px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
+
+#main-container .display .title {
+    font-size: 18px;
+    font-weight: 600;
+    margin-bottom: 12px;
+}
+
+#main-container .display .content {
+    width: 100%;
+}
+
+#main-container .display .content .progress-bar {
+    width: 100%;
+    height: 24px;
+    background-color: rgba(255, 255, 255, 0.2);
+    border-radius: 12px;
+    overflow: hidden;
+}
+
+#main-container .display .content .progress-bar .progress {
+    height: 100%;
+    background-color: #4caf50;
+    border-radius: 12px 0 0 12px;
+    transition: width 0.3s ease;
+}

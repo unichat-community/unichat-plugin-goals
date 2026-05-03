@@ -1,0 +1,71 @@
+name: main.yaml
+
+on:
+  push:
+    tags:
+      - '[0-9]+.[0-9]+.[0-9]+*'
+
+env:
+  YQ_VERSION: v4.50.1
+
+jobs:
+  package:
+    runs-on: codeberg-tiny
+    permissions:
+      contents: write
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v6.0.1
+
+      - name: Install yq
+        run: |
+          if [ "$(uname -m)" = "x86_64" ]; then
+            ARCH="amd64"
+          elif [ "$(uname -m)" = "aarch64" ]; then
+            ARCH="arm64"
+          else
+            echo "Unsupported architecture."
+            exit 1
+          fi
+          mkdir -p "$HOME/.local/bin"
+          wget "https://github.com/mikefarah/yq/releases/download/${{ env.YQ_VERSION }}/yq_linux_${ARCH}" -O "$HOME/.local/bin/yq"
+          chmod +x "$HOME/.local/bin/yq"
+          echo "$HOME/.local/bin" >> "$FORGEJO_PATH"
+
+      - name: Check manifest version
+        run: |
+          TAG_NAME="${FORGEJO_REF#refs/tags/}"
+          MANIFEST_VERSION=$(yq e '.version' manifest.yaml)
+          if [ "$MANIFEST_VERSION" != "$TAG_NAME" ]; then
+            echo "Manifest version ($MANIFEST_VERSION) does not match tag name ($TAG_NAME)."
+            exit 1
+          else
+            echo "Manifest version matches tag name."
+          fi
+
+      - name: Prepare Folder to ZIP
+        run: |
+          PLUGIN_NAME="$(yq e '.name' manifest.yaml)"
+          mkdir -p "dist/${PLUGIN_NAME}"
+          cp -r assets "dist/${PLUGIN_NAME}/" || echo "No assets directory to copy."
+          cp -r data "dist/${PLUGIN_NAME}/"
+          cp -r widgets "dist/${PLUGIN_NAME}/" || echo "No widgets directory to copy."
+          cp icon.png "dist/${PLUGIN_NAME}/" || echo "No icon.png file to copy."
+          cp LICENSE "dist/${PLUGIN_NAME}/" || echo "No LICENSE file to copy."
+          cp manifest.yaml "dist/${PLUGIN_NAME}/"
+
+      - name: Create ZIP Archive
+        id: prepare_release
+        run: |
+          PLUGIN_NAME="$(yq e '.name' manifest.yaml)"
+          PLUGIN_VERSION="$(yq e '.version' manifest.yaml)"
+          ZIP_FILE="${PLUGIN_NAME}-${PLUGIN_VERSION}.zip"
+          echo "Creating ZIP archive: $ZIP_FILE"
+          cd dist && zip -r "$ZIP_FILE" "${PLUGIN_NAME}" -x "**/fieldstate.json"
+
+      - name: Create and upload to Forgejo Release
+        uses: actions/forgejo-release@v2.11.3
+        with:
+          direction: upload
+          prerelease: true
+          release-dir: ${{ forgejo.workspace }}/dist
