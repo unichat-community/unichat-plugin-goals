@@ -62,6 +62,7 @@ jobs:
           ZIP_FILE="${PLUGIN_NAME}-${PLUGIN_VERSION}.zip"
           echo "Creating ZIP archive: $ZIP_FILE"
           cd dist && zip -r "$ZIP_FILE" "${PLUGIN_NAME}" -x "**/fieldstate.json"
+          rm -rf "${PLUGIN_NAME}"
 
       - name: Create and upload to Forgejo Release
         uses: actions/forgejo-release@v2.11.3
