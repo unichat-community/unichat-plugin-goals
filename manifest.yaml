@@ -3,6 +3,6 @@ description: A plugin that implements a goal system for sponsorship and donation
 version: 1.0.0-alpha.0
 author: Voguh <voguhofc@protonmail.com>
 license: EPL-2.0
-homepage: https://codeberg.org/unichat-community/unichat-plugin-goals
+homepage: https://github.com/unichat-community/unichat-plugin-goals
 dependencies:
   - unichat@[1.4.0,)
