@@ -1,16 +1,16 @@
-name: main.yaml
+name: Release
 
 on:
   push:
     tags:
-      - '**'
+      - '[0-9]+.[0-9]+.[0-9]+*'
 
 env:
   YQ_VERSION: v4.50.1
 
 jobs:
   package:
-    runs-on: codeberg-tiny
+    runs-on: ubuntu-24.04
     permissions:
       contents: write
     steps:
@@ -30,11 +30,11 @@ jobs:
           mkdir -p "$HOME/.local/bin"
           wget "https://github.com/mikefarah/yq/releases/download/${{ env.YQ_VERSION }}/yq_linux_${ARCH}" -O "$HOME/.local/bin/yq"
           chmod +x "$HOME/.local/bin/yq"
-          echo "$HOME/.local/bin" >> "$FORGEJO_PATH"
+          echo "$HOME/.local/bin" >> "$GITHUB_PATH"
 
       - name: Check manifest version
         run: |
-          TAG_NAME="${FORGEJO_REF#refs/tags/}"
+          TAG_NAME="${{ github.ref_name }}"
           MANIFEST_VERSION=$(yq e '.version' manifest.yaml)
           if [ "$MANIFEST_VERSION" != "$TAG_NAME" ]; then
             echo "Manifest version ($MANIFEST_VERSION) does not match tag name ($TAG_NAME)."
@@ -62,11 +62,16 @@ jobs:
           ZIP_FILE="${PLUGIN_NAME}-${PLUGIN_VERSION}.zip"
           echo "Creating ZIP archive: $ZIP_FILE"
           cd dist && zip -r "$ZIP_FILE" "${PLUGIN_NAME}" -x "**/fieldstate.json"
-          rm -rf "${PLUGIN_NAME}"
 
-      - name: Create and upload to Forgejo Release
-        uses: actions/forgejo-release@v2.11.3
-        with:
-          direction: upload
-          prerelease: true
-          release-dir: ${{ forgejo.workspace }}/dist
+      - name: Create GitHub Release
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          PLUGIN_NAME="$(yq e '.name' manifest.yaml)"
+          VERSION="$(yq e '.version' manifest.yaml)"
+          ZIP_FILE="${PLUGIN_NAME}-${VERSION}.zip"
+          if [[ "$VERSION" == *"-"* || "$VERSION" == *"+"* ]]; then
+            gh release create "$VERSION" "dist/$ZIP_FILE" --prerelease
+          else
+            gh release create "$VERSION" "dist/$ZIP_FILE"
+          fi
