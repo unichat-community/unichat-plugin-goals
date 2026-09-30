@@ -68,10 +68,10 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           PLUGIN_NAME="$(yq e '.name' manifest.yaml)"
-          VERSION="$(yq e '.version' manifest.yaml)"
-          ZIP_FILE="${PLUGIN_NAME}-${VERSION}.zip"
-          if [[ "$VERSION" == *"-"* || "$VERSION" == *"+"* ]]; then
-            gh release create "$VERSION" "dist/$ZIP_FILE" --prerelease
+          PLUGIN_VERSION="$(yq e '.version' manifest.yaml)"
+          ZIP_FILE="${PLUGIN_NAME}-${PLUGIN_VERSION}.zip"
+          if [[ "$PLUGIN_VERSION" == *"-"* ]]; then
+            gh release create "$PLUGIN_VERSION" "dist/$ZIP_FILE" --prerelease
           else
-            gh release create "$VERSION" "dist/$ZIP_FILE"
+            gh release create "$PLUGIN_VERSION" "dist/$ZIP_FILE"
           fi
